@@ -9,7 +9,7 @@ class DiskCache(
     val folder: File,
     private val maxSize: Long,
     private val appVersion: Int
-) : Closeable {
+) : Closeable, Flushable {
 
     private var initialized = false
     private var closed = false
@@ -302,6 +302,16 @@ class DiskCache(
         }
     }
 
+    @Synchronized
+    fun remove(key: String) {
+        checkIfClosed()
+        validateKey(key)
+        initialize()
+
+        val entry = entries[key] ?: return
+        removeEntry(entry)
+    }
+
     private fun removeEntry(entry: Entry) {
         if (entry.snapshotOpenedCount > 0) {
             journalWriter!!.apply {
@@ -396,6 +406,15 @@ class DiskCache(
         journalWriter!!.close()
         journalWriter = null
         closed = true
+    }
+
+    @Synchronized
+    override fun flush() {
+        if (!initialized) return
+
+        checkIfClosed()
+        cleanupEntries()
+        journalWriter!!.flush()
     }
 
     private fun validateKey(key: String) {
