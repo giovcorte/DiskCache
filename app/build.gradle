@@ -7,7 +7,6 @@ android {
     compileSdk 31
 
     defaultConfig {
-        applicationId "com.diskcache.diskcache"
         minSdk 26
         targetSdk 31
         versionCode 1
