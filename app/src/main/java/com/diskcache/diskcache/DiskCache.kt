@@ -1,5 +1,7 @@
 package com.diskcache.diskcache
 
+import com.diskcache.diskcache.io.FakeWriter
+import com.diskcache.diskcache.io.FaultHidingWriter
 import kotlinx.coroutines.*
 import java.io.*
 import java.lang.NumberFormatException

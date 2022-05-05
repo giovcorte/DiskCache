@@ -1,4 +1,4 @@
-package com.diskcache.diskcache
+package com.diskcache.diskcache.io
 
 import java.io.BufferedWriter
 import java.io.File

@@ -1,4 +1,4 @@
-package com.diskcache.diskcache
+package com.diskcache.diskcache.io
 
 import java.io.*
 import java.nio.charset.StandardCharsets
