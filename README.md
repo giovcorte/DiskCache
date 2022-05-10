@@ -4,6 +4,19 @@ Simple and readable disk cache for kotlin and android applications (with journal
 This is a simple lru disk cache, based on the idea of the original DiskLruCache but realized in modern kotlin and with some semplifications (not less functions!). 
 It doesn't use any exernal library, and has a good recovery and fault tollerance. 
 
+To use this library in your projects, two easy step are required, the first on your main build.gradle and the second in your module level build.gradle:
+
+    allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+
+    dependencies {
+	        implementation 'com.github.giovcorte:DiskCache:Tag'
+	}
+
 Example of usages in a wrapper class for storing and retrieving bitmaps:
 
 ```kotlin
