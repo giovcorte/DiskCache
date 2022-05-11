@@ -571,6 +571,10 @@ class DiskCache(
         }
     }
 
+    /**
+     * Constants
+     */
+
     companion object {
         private val KEY_PATTERN = "[a-zA-Z0-9_-]{1,120}".toRegex()
         private const val FILE_TMP = ".tmp"
@@ -582,4 +586,5 @@ class DiskCache(
         private const val REMOVE = "REMOVE"
         private const val JOURNAL_ENTRIES_START = "START"
     }
+
 }

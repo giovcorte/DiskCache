@@ -26,4 +26,12 @@ class FaultHidingWriter(
         }
     }
 
+    override fun flush() {
+        try {
+            super.flush()
+        } catch (e: Exception) {
+            onError(e)
+        }
+    }
+
 }
