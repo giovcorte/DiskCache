@@ -39,6 +39,12 @@ abstract class AsyncDiskCache<T>(
         return diskCache.get(key) != null
     }
 
+    suspend fun clear() {
+        mutex.withLock {
+            diskCache.evictAll()
+        }
+    }
+
     abstract fun writeValueToFile(value: T, file: File)
 
     abstract fun decodeValueFromFile(file: File) : T?

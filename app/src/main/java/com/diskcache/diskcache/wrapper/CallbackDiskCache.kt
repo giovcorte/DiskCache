@@ -47,6 +47,15 @@ abstract class CallbackDiskCache<T>(
         return diskCache.get(key) != null
     }
 
+    fun clear(callback: (success: Boolean) -> Unit) {
+        coroutineScope.launch {
+            mutex.withLock {
+                diskCache.evictAll()
+                callback(true)
+            }
+        }
+    }
+
     abstract fun writeValueToFile(value: T, file: File)
 
     abstract fun decodeValueFromFile(file: File) : T?

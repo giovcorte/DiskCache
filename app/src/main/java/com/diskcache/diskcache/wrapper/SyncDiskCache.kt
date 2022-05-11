@@ -31,6 +31,10 @@ abstract class SyncDiskCache<T>(private val diskCache: DiskCache) {
     @Synchronized
     fun contains(key: String) : Boolean = diskCache.get(key) != null
 
+    fun clear() {
+        diskCache.evictAll()
+    }
+
     abstract fun writeValueToFile(value: T, file: File)
 
     abstract fun decodeValueFromFile(file: File) : T?
