@@ -19,6 +19,7 @@ class DiskCache(
 
     private val journal = File(folder.absolutePath + File.separator + JOURNAL)
     private val journalTmp = File(folder.absolutePath + File.separator + JOURNAL_TMP)
+    private val journalBackup = File(folder.absolutePath + File.separator + JOURNAL_BACKUP)
     private var operationsSinceRewrite = 0
     private var journalWriter: BufferedWriter? = null
     private var hasJournalError = false
@@ -44,6 +45,14 @@ class DiskCache(
 
         folder.mkdirs()
         journalTmp.delete()
+
+        if (journalBackup.exists()) {
+            if (journal.exists()) {
+                journalBackup.delete()
+            } else {
+                rename(journalBackup, journal)
+            }
+        }
 
         if (journal.exists()) {
             try {
@@ -166,7 +175,8 @@ class DiskCache(
                     append(CLEAN)
                     append(" ")
                     append(entry.key)
-                    entry.writeLength(this)
+                    append(" ")
+                    append(entry.strLength())
                     newLine()
                 } else {
                     append(DIRTY)
@@ -179,7 +189,14 @@ class DiskCache(
             close()
         }
 
-        rename(journalTmp, journal)
+        if (journal.exists()) {
+            rename(journal, journalBackup)
+            rename(journalTmp, journal)
+            journalBackup.delete()
+        } else {
+            rename(journalTmp, journal)
+        }
+
         operationsSinceRewrite = 0
         hasJournalError = false
         mostRecentRebuildFailed = false
@@ -303,7 +320,8 @@ class DiskCache(
                 append(CLEAN)
                 append(" ")
                 append(entry.key)
-                entry.writeLength(this)
+                append(" ")
+                append(entry.strLength())
                 newLine()
                 flush()
             } else { // if not success or published remove
@@ -502,9 +520,8 @@ class DiskCache(
             }
         }
 
-        fun writeLength(writer: Writer) {
-            writer.append(" ")
-            writer.append(length.toString())
+        fun strLength() : String {
+            return length.toString()
         }
 
         fun cleanFile(): File {
@@ -580,6 +597,7 @@ class DiskCache(
         private const val FILE_TMP = ".tmp"
         private const val JOURNAL = "journal"
         private const val JOURNAL_TMP = "journal.tmp"
+        private const val JOURNAL_BACKUP = "journal.backup"
         private const val CLEAN = "CLEAN"
         private const val READ = "READ"
         private const val DIRTY = "DIRTY"
