@@ -77,11 +77,19 @@ class DiskCache(
 
     private fun readJournal() {
         BufferedReader(FileReader(journal)).use { bufferedReader ->
+            val magic = bufferedReader.readLine()
             val version = bufferedReader.readLine()
-            val start = bufferedReader.readLine()
+            val appVersionString = bufferedReader.readLine()
+            val valueCountString = bufferedReader.readLine()
+            val blank = bufferedReader.readLine()
 
-            if (version != appVersion.toString() || start != JOURNAL_ENTRIES_START) {
-                throw IOException()
+            if (MAGIC != magic ||
+                VERSION != version ||
+                appVersion.toString() != appVersionString ||
+                size.toString() != valueCountString ||
+                blank.isNotEmpty()) {
+                    throw IOException("Unexpected journal file header: \" +\n" +
+                        "                    \"[$magic, $version, $appVersionString, $valueCountString, $blank]\"")
             }
 
             var lineCount = 0
@@ -166,9 +174,14 @@ class DiskCache(
         journalTmp.createNewFile()
 
         FileOutputStream(journalTmp).bufferedWriter(StandardCharsets.UTF_8).apply {
+            append(MAGIC)
+            newLine()
+            append(VERSION)
+            newLine()
             append(appVersion.toString())
             newLine()
-            append(JOURNAL_ENTRIES_START)
+            append(size.toString())
+            newLine()
             newLine()
             entries.values.forEach { entry ->
                 if (entry.editor == null) {
@@ -602,7 +615,8 @@ class DiskCache(
         private const val READ = "READ"
         private const val DIRTY = "DIRTY"
         private const val REMOVE = "REMOVE"
-        private const val JOURNAL_ENTRIES_START = "START"
+        private const val MAGIC = "diskCache.DiskCache"
+        private const val VERSION = "1"
     }
 
 }
