@@ -89,7 +89,7 @@ class DiskCache(
                 size.toString() != valueCountString ||
                 blank.isNotEmpty()) {
                     throw IOException("Unexpected journal file header: \" +\n" +
-                        "                    \"[$magic, $version, $appVersionString, $valueCountString, $blank]\"")
+                        "\"[$magic, $version, $appVersionString, $valueCountString, $blank]\"")
             }
 
             var lineCount = 0
@@ -308,6 +308,7 @@ class DiskCache(
     @Synchronized
     private fun commitEntry(editor: Editor, success: Boolean) {
         val entry = editor.entry
+        check(entry.editor == editor)
 
         if (success && !entry.zombie) {
             entry.readable = true
@@ -581,6 +582,13 @@ class DiskCache(
         fun detach() {
             if (entry.editor == this) {
                 entry.zombie = true
+            }
+        }
+
+        fun commitAndGet(): Snapshot? {
+            synchronized(this@DiskCache) {
+                commit()
+                return get(entry.key)
             }
         }
     }
