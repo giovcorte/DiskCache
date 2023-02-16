@@ -11,7 +11,8 @@ import java.nio.charset.StandardCharsets
 class DiskCache(
     val folder: File,
     private val maxSize: Long,
-    private val appVersion: Int
+    private val appVersion: Int,
+    cleanupDispatcher: CoroutineDispatcher
 ) : Closeable, Flushable {
 
     private var initialized = false
@@ -31,7 +32,7 @@ class DiskCache(
     private val entries = LinkedHashMap<String, Entry>(0, 0.75f, true)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(1))
+    private val coroutineScope = CoroutineScope(cleanupDispatcher.limitedParallelism(1))
 
     /**
      * Journal methods
@@ -353,17 +354,18 @@ class DiskCache(
     }
 
     @Synchronized
-    fun remove(key: String) {
+    fun remove(key: String) : Boolean {
         checkIfClosed()
         validateKey(key)
         initialize()
-        val entry = entries[key] ?: return
+        val entry = entries[key] ?: return false
 
-        removeEntry(entry)
-        if (size <= maxSize) mostRecentTrimFailed = false
+        val removed = removeEntry(entry)
+        if (removed && size <= maxSize) mostRecentTrimFailed = false
+        return removed
     }
 
-    private fun removeEntry(entry: Entry) {
+    private fun removeEntry(entry: Entry) : Boolean {
         if (entry.snapshotOpenedCount > 0) {
             journalWriter!!.apply {
                 append(DIRTY)
@@ -376,7 +378,7 @@ class DiskCache(
 
         if (entry.editor != null || entry.snapshotOpenedCount > 0) {
             entry.zombie = true
-            return
+            return true
         }
 
         size -= entry.length
@@ -398,6 +400,8 @@ class DiskCache(
         if (journalRewriteRequired()) {
             launchCleanup()
         }
+
+        return true
     }
 
     private fun launchCleanup() {
