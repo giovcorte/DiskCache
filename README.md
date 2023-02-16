@@ -58,12 +58,12 @@ You can easily use these examples in a coroutineScope to run non-blocking disk c
 ```kotlin
 val diskCache = AndroidDiskCache.Builder.folder(cacheFolder).appVersion(1).maxSize(1024).build()
 
-diskCache.put(imageUrl) {
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, FileOutputStream(it))
+diskCache.put(imageUrl) { cachedFile ->
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, FileOutputStream(cachedFile))
 }
 
-val bitmap: Bitmap? diskCache.get(imageUrl) {
-    BitmapFactory.decodeStream(FileInputStream(it))
+val bitmap: Bitmap? diskCache.get(imageUrl) { cachedFile ->
+    BitmapFactory.decodeStream(FileInputStream(cachedFile))
 }
 
 val exist: Boolean = diskCache.contains(imageUrl)
