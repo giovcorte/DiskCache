@@ -34,6 +34,10 @@ class DiskCache(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val coroutineScope = CoroutineScope(cleanupDispatcher.limitedParallelism(1))
 
+    init {
+        require(maxSize > 0L) { "maxSize <= 0" }
+    }
+
     /**
      * Journal methods
      */
