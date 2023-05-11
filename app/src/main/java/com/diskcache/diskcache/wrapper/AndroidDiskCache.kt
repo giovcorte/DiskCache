@@ -53,6 +53,20 @@ open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flush
         }
     }
 
+    fun get(key: String) : ByteArray? {
+        return diskCache.get(key)?.let { snapshot ->
+            try {
+                FileInputStream(snapshot.file()).buffered().use {
+                    it.readBytes()
+                }
+            } catch (e: Exception) {
+                null
+            } finally {
+                snapshot.close()
+            }
+        }
+    }
+
     fun <T> get(key: String, decode: (bytes: ByteArray?) -> T) : T? {
         return diskCache.get(key)?.let { snapshot ->
             val bytes = try {
