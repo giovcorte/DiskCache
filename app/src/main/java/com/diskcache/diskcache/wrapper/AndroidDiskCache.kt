@@ -4,10 +4,12 @@ import com.diskcache.diskcache.DiskCache
 import kotlinx.coroutines.*
 import java.io.Closeable
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.Flushable
 
 @Suppress("unused")
-class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flushable {
+open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flushable {
 
     object Builder {
         private var folder: File? = null
@@ -37,20 +39,32 @@ class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flushable 
             } ?: throw IllegalStateException("you must provide a folder to initialize KDiskCache")
     }
 
-    fun put(key: String, writeToFile: (file: File) -> Unit) {
+    fun put(key: String, bytes: ByteArray) {
         diskCache.edit(key)?.let { editor ->
-            writeToFile(editor.file())
-            editor.commit()
+            try {
+                FileOutputStream(editor.file()).buffered().use {
+                    it.write(bytes)
+                }
+            } catch (_: Exception) {
+                editor.abort()
+            } finally {
+                editor.commit()
+            }
         }
     }
 
-    fun <T> get(key: String, readFromFile: (file: File) -> T) : T? {
-        diskCache.get(key)?.let { snapshot ->
-            val result : T? = readFromFile(snapshot.file())
-            snapshot.close()
-            return result
-        } ?: run {
-            return null
+    fun <T> get(key: String, decode: (bytes: ByteArray?) -> T) : T? {
+        return diskCache.get(key)?.let { snapshot ->
+            val bytes = try {
+                FileInputStream(snapshot.file()).buffered().use {
+                    it.readBytes()
+                }
+            } catch (e: Exception) {
+                null
+            } finally {
+                snapshot.close()
+            }
+            decode(bytes)
         }
     }
 
