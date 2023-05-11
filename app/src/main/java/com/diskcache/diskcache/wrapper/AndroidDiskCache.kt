@@ -8,6 +8,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.Flushable
 
+
 @Suppress("unused")
 open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flushable {
 
@@ -37,6 +38,20 @@ open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flush
                         cleanupPercentage = cleanupPercentage,
                         cleanupDispatcher = dispatcher))
             } ?: throw IllegalStateException("you must provide a folder to initialize KDiskCache")
+    }
+
+    fun <T> T.put(key: String, data: (T) -> ByteArray) {
+        diskCache.edit(key)?.let { editor ->
+            try {
+                FileOutputStream(editor.file()).buffered().use {
+                    it.write(data(this@put))
+                }
+            } catch (_: Exception) {
+                editor.abort()
+            } finally {
+                editor.commit()
+            }
+        }
     }
 
     fun put(key: String, bytes: ByteArray) {
