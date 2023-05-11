@@ -12,7 +12,8 @@ class DiskCache(
     val folder: File,
     private val maxSize: Long,
     private val appVersion: Int,
-    cleanupDispatcher: CoroutineDispatcher
+    private val cleanupPercentage: Double = 0.9,
+    cleanupDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : Closeable, Flushable {
 
     private var initialized = false
@@ -36,6 +37,7 @@ class DiskCache(
 
     init {
         require(maxSize > 0L) { "maxSize <= 0" }
+        require(cleanupPercentage > 0 && cleanupPercentage < 1) { "cleanup percentage must be > 0 or < 1" }
     }
 
     /**
@@ -431,7 +433,7 @@ class DiskCache(
     }
 
     private fun cleanupEntries() {
-        while (size > maxSize * 0.8) {
+        while (size > maxSize * cleanupPercentage) {
             if (!removeOldestEntry()) return
         }
         mostRecentTrimFailed = false

@@ -13,7 +13,8 @@ class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flushable 
         private var folder: File? = null
         private var appVersion: Int = 1
         private var dispatcher: CoroutineDispatcher = Dispatchers.IO
-        private var maxSize: Long = 1024000000
+        private var maxSize: Long = 524288
+        private var cleanupPercentage: Double = 0.9
 
         fun folder(folder: File) = apply { this.folder = folder }
 
@@ -23,12 +24,15 @@ class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flushable 
 
         fun maxSize(maxSize: Long) = apply { this.maxSize = maxSize }
 
+        fun cleanupPercentage(cleanupPercentage: Double) { this.cleanupPercentage = cleanupPercentage }
+
         fun build() = folder?.let { cacheFolder ->
                 AndroidDiskCache(
                     DiskCache(
                         folder = cacheFolder,
                         maxSize = maxSize,
                         appVersion = appVersion,
+                        cleanupPercentage = cleanupPercentage,
                         cleanupDispatcher = dispatcher))
             } ?: throw IllegalStateException("you must provide a folder to initialize KDiskCache")
     }
