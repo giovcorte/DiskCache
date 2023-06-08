@@ -1,11 +1,11 @@
 package com.diskcache.diskcache.wrapper
 
 import com.diskcache.diskcache.DiskCache
+import com.diskcache.diskcache.io.bufferedInputStream
+import com.diskcache.diskcache.io.bufferedOutputStream
 import kotlinx.coroutines.*
 import java.io.Closeable
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.Flushable
 
 
@@ -40,11 +40,28 @@ open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flush
             } ?: throw IllegalStateException("you must provide a folder to initialize KDiskCache")
     }
 
-    fun <T> T.put(key: String, data: (T) -> ByteArray) {
+    fun putToFile(key: String, writeToFile: (file: File) -> Unit) {
+        diskCache.edit(key)?.let { editor ->
+            writeToFile(editor.file())
+            editor.commit()
+        }
+    }
+
+    fun <T> getFromFile(key: String, readFromFile: (file: File) -> T) : T? {
+        diskCache.get(key)?.let { snapshot ->
+            val result : T? = readFromFile(snapshot.file())
+            snapshot.close()
+            return result
+        } ?: run {
+            return null
+        }
+    }
+
+    fun putAsBytes(key: String, data: () -> ByteArray) {
         diskCache.edit(key)?.let { editor ->
             try {
-                FileOutputStream(editor.file()).buffered().use {
-                    it.write(data(this@put))
+                editor.file().bufferedOutputStream().use {
+                    it.write(data())
                 }
             } catch (_: Exception) {
                 editor.abort()
@@ -54,10 +71,10 @@ open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flush
         }
     }
 
-    fun put(key: String, bytes: ByteArray) {
+    fun putBytes(key: String, bytes: ByteArray) {
         diskCache.edit(key)?.let { editor ->
             try {
-                FileOutputStream(editor.file()).buffered().use {
+                editor.file().bufferedOutputStream().use {
                     it.write(bytes)
                 }
             } catch (_: Exception) {
@@ -68,10 +85,10 @@ open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flush
         }
     }
 
-    fun get(key: String) : ByteArray? {
+    fun getBytes(key: String) : ByteArray? {
         return diskCache.get(key)?.let { snapshot ->
             try {
-                FileInputStream(snapshot.file()).buffered().use {
+                snapshot.file().bufferedInputStream().use {
                     it.readBytes()
                 }
             } catch (e: Exception) {
@@ -82,10 +99,10 @@ open class AndroidDiskCache(private val diskCache: DiskCache) : Closeable, Flush
         }
     }
 
-    fun <T> get(key: String, decode: (bytes: ByteArray?) -> T) : T? {
+    fun <T> getFromBytes(key: String, decode: (bytes: ByteArray?) -> T) : T? {
         return diskCache.get(key)?.let { snapshot ->
             val bytes = try {
-                FileInputStream(snapshot.file()).buffered().use {
+                snapshot.file().bufferedInputStream().use {
                     it.readBytes()
                 }
             } catch (e: Exception) {
