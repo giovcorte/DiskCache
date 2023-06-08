@@ -68,9 +68,9 @@ val bitmap: Bitmap? = diskCache.getFromFile(imageUrl) { cachedFile ->
 
 diskCache.putBytes(bytesKey, byteArray)
 
-val byteArray: Bitmap? = diskCache.getBytes(imageUrl)
+val byteArray: ByteArray? = diskCache.getBytes(bytesKey)
 
-val bitmap: Bitmap? = diskCache.getFromBytes(imageUrl) { byteArray ->
+val bitmap: Bitmap? = diskCache.getFromBytes(bytesKey) { byteArray ->
     BitmapFactory.decodeStream(ByteInputStream(byteArray))
 }
 
