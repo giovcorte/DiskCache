@@ -51,12 +51,19 @@ class ImageDiskCache(private val diskCache: DiskCache) {
 
 Like the original DiskLruCache, we have to open and close Editors for modifying a file and Snapshots for reading. You can open multiple Snapshots but only one Editor at time.
 When you have finished to edit/read the file, you have to commit() the changes or close() the Sanpshot, so the entry can be saved or, in case of a last recentry used entry, deleted if space cleanup is required. A difference form the original is that this cache expose the file you store, and not an InputStream/OutputStream. Also the keys must match the [a-zA-Z0-9] regex. In the Utils class you will find a method to format your keys.
+The cleanup percentage is really useful in heavy cache using apps, in order to limit the overhead caused by continously evicting one entry to save another when the cache is full.
 
 If you dont want to use directly the DiskCache there are available a simple wrapper, that encapsulate a DiskCache instance and expose the methods with inline functions for the sake of simplicity and clean code!
 You can easily use these examples in a coroutineScope to run non-blocking disk cache operations:
 
 ```kotlin
-val diskCache = AndroidDiskCache.Builder.folder(cacheFolder).appVersion(1).maxSize(1024).build()
+val diskCache = AndroidDiskCache.Builder
+			.folder(cacheFolder)
+			.appVersion(1)
+			.maxSize(1024)
+			.cleanupPercentage(0.7)
+			.dispatcher(Dispatchers.IO)
+			.build()
 
 diskCache.putToFile(imageUrl) { cachedFile ->
     bitmap.compress(Bitmap.CompressFormat.PNG, 100, FileOutputStream(cachedFile))
