@@ -158,8 +158,8 @@ class DiskCache(
                 size += entry.length
             } else {
                 entry.editor = null
-                entry.cleanFile().delete()
-                entry.dirtyFile().delete()
+                entry.cleanFile.delete()
+                entry.dirtyFile.delete()
                 iterator.remove()
             }
         }
@@ -196,7 +196,7 @@ class DiskCache(
                     append(" ")
                     append(entry.key)
                     append(" ")
-                    append(entry.strLength())
+                    append(entry.strLength)
                     newLine()
                 } else {
                     append(DIRTY)
@@ -224,7 +224,7 @@ class DiskCache(
     }
 
     private fun newJournalWriter(): BufferedWriter {
-        return FaultHidingWriter(journal, true) {
+        return FaultHidingWriter(journal) {
             hasJournalError = true
         }
     }
@@ -321,13 +321,13 @@ class DiskCache(
             entry.readable = true
 
             val oldSize = entry.length
-            val newSize = entry.dirtyFile().length()
+            val newSize = entry.dirtyFile.length()
             size = size - oldSize + newSize
 
             entry.length = newSize
-            rename(entry.dirtyFile(), entry.cleanFile())
+            rename(entry.dirtyFile, entry.cleanFile)
         } else {
-            entry.dirtyFile().delete()
+            entry.dirtyFile.delete()
         }
 
         entry.editor = null
@@ -342,7 +342,7 @@ class DiskCache(
                 append(" ")
                 append(entry.key)
                 append(" ")
-                append(entry.strLength())
+                append(entry.strLength)
                 newLine()
                 flush()
             } else { // if not success or published remove
@@ -389,8 +389,8 @@ class DiskCache(
 
         size -= entry.length
 
-        entry.cleanFile().delete()
-        entry.dirtyFile().delete()
+        entry.cleanFile.delete()
+        entry.dirtyFile.delete()
 
         operationsSinceRewrite++
         journalWriter!!.apply {
@@ -527,7 +527,7 @@ class DiskCache(
             if (!readable) return null
             if (editor != null || zombie) return null
 
-            if (!cleanFile().exists()) {
+            if (!cleanFile.exists()) {
                 removeEntry(this)
                 return null
             }
@@ -544,17 +544,13 @@ class DiskCache(
             }
         }
 
-        fun strLength() : String {
-            return length.toString()
-        }
+        val strLength : String
+            get() = length.toString()
 
-        fun cleanFile(): File {
-            return File(folder.absolutePath + File.separator + key)
-        }
-
-        fun dirtyFile(): File {
-            return File(folder.absolutePath + File.separator + key + FILE_TMP)
-        }
+        val cleanFile: File
+            get() = File(folder.absolutePath + File.separator + key)
+        val dirtyFile: File
+            get() = File(folder.absolutePath + File.separator + key + FILE_TMP)
     }
 
     inner class Editor(val entry: Entry) {
@@ -562,7 +558,7 @@ class DiskCache(
         private var closed = false
 
         fun file(): File {
-            val file = entry.dirtyFile()
+            val file = entry.dirtyFile
 
             if (!file.exists()) {
                 folder.mkdirs()
@@ -606,7 +602,7 @@ class DiskCache(
     inner class Snapshot(private val entry: Entry) {
 
         fun file(): File {
-            return entry.cleanFile()
+            return entry.cleanFile
         }
 
         fun close() {

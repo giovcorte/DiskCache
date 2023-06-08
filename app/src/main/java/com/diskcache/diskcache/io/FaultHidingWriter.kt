@@ -1,13 +1,14 @@
 package com.diskcache.diskcache.io
 
-import java.io.*
-import java.nio.charset.StandardCharsets
+import java.io.BufferedWriter
+import java.io.File
+import java.io.IOException
+import java.io.Writer
 
 class FaultHidingWriter(
     file: File,
-    append: Boolean,
     val onError: (exception: Exception) -> Unit
-): BufferedWriter(FileOutputStream(file, append).bufferedWriter(StandardCharsets.UTF_8)) {
+): BufferedWriter(file.appendOutputStream()) {
 
     private var hasErrors = false
 
