@@ -14,7 +14,7 @@ To use this library in your projects two easy step are required, the first on yo
 	}
 
     dependencies {
-	        implementation 'com.github.giovcorte:DiskCache:1.4'
+	        implementation 'com.github.giovcorte:DiskCache:2.0'
 	}
 
 Example of the usage of the low-level APIs in a wrapper class for storing and retrieving bitmaps:
